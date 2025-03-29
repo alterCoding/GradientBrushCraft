@@ -11,13 +11,13 @@
  fallback to the default value
 -->
 	<Target Name="AddGitRevCountToFileVersion" BeforeTargets="GetAssemblyVersion" Returns="FileVersion">
-		<Exec ConsoleToMsBuild="true" Command="git rev-list --count" ContinueOnError="true">
+		<Exec ConsoleToMsBuild="true" Command="git rev-list HEAD --count" ContinueOnError="true">
 			<Output TaskParameter="ConsoleOutput" PropertyName="gitRevCount" />
 			<Output TaskParameter="ExitCode" PropertyName="gitExitCode"/>
 		</Exec>
 
 		<PropertyGroup Condition="$(gitExitCode) == '0'">
-			<buildVerNum>$(gitRevCount)</buildVerNum>
+			<revVerNum>$(gitRevCount)</revVerNum>
 			<FileVersion>$(MajorVerNum).$(MinorVerNum).$(revVerNum).$(buildVerNum)</FileVersion>
 		</PropertyGroup>
 	</Target>
