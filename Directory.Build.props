@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <Company>AlterCoding</Company>
+    <Copyright>© 2025 Manfred.Ehrhart-AlterCoding (https://github.com/alterCoding)</Copyright>
+  </PropertyGroup>
+
+	<PropertyGroup>
+	  <BaseIntermediateOutputPath>$(SolutionDir)\build\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+	  <!--<IntermediateOutputPath>$(SolutionDir)\build\obj\$(MSBuildProjectName)\$(Configuration)</IntermediateOutputPath>-->
+	  <OutputPath>$(SolutionDir)\build\bin\$(Configuration)</OutputPath>
+	</PropertyGroup>
+
+</Project>

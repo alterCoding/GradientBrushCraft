@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+	  <OutputType>Exe</OutputType>
+	  <Platform>AnyCPU</Platform>
+	  <TargetFramework>net48</TargetFramework>
+	  <RootNamespace>AltCoD</RootNamespace>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<MajorVerNum>1</MajorVerNum>
+		<MinorVerNum>0</MinorVerNum>
+		<revVerNum>0</revVerNum>
+		<buildVerNum>0</buildVerNum>
+		<PatchSemVerNum>0</PatchSemVerNum>
+		<MetaSemVer>+fxonly</MetaSemVer>
+		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-beta.1$(MetaSemVer)</InformationalVersion>
+	</PropertyGroup>
+
+	<Import Project="$(SolutionDir)assemblyVersions.targets" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\libBCL\BCL.Reflection\EmbeddedAssemblyLoader.cs" Link="EmbeddedAssemblyLoader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libBCL\libBCL.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="..\..\build\bin\$(Configuration)-NoGUI\net472\libBCL.dll">
+			<LogicalName>LibBCL.dll</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+</Project>

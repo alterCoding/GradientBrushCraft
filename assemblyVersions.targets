@@ -1,0 +1,70 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<PropertyGroup>
+		<AssemblyVersion>$(MajorVerNum).$(MinorVerNum).0.0</AssemblyVersion>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+	</PropertyGroup>
+
+<!-- retrieve the revision count from Git and use it as the build number. If an error occurs
+ fallback to the default value
+-->
+	<Target Name="AddGitRevCountToFileVersion" BeforeTargets="GetAssemblyVersion" Returns="FileVersion">
+		<Exec ConsoleToMsBuild="true" Command="git rev-list --count" ContinueOnError="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="gitRevCount" />
+			<Output TaskParameter="ExitCode" PropertyName="gitExitCode"/>
+		</Exec>
+
+		<PropertyGroup Condition="$(gitExitCode) == '0'">
+			<buildVerNum>$(gitRevCount)</buildVerNum>
+			<FileVersion>$(MajorVerNum).$(MinorVerNum).$(revVerNum).$(buildVerNum)</FileVersion>
+		</PropertyGroup>
+	</Target>
+
+<!-- if we failed to retrieve the git rev count, use 0 or any initial value -->
+	<Target Name="FallbackFileVersion" Condition="$(gitExitCode) != '0'" AfterTargets="AddGitRevCountToFileVersion">
+		<PropertyGroup>
+			<FileVersion>$(MajorVerNum).$(MinorVerNum).$(revVerNum).$(buildVerNum)</FileVersion>
+		</PropertyGroup>
+	</Target>
+
+	<Target Name="SaveVersionFile" AfterTargets="Build">
+		<!-- Write the new version back to Version.txt -->
+		<WriteLinesToFile File="$(VersionFile)" Lines="$(FileVersion)" Overwrite="true" />
+	</Target>
+	
+	<!-- increment the version number using a simple text file to keep the last version info -->
+	<Target Name="IncrementBuildNumber" BeforeTargets="BeforeBuild">
+
+		<PropertyGroup>
+			<VersionFile>$(ProjectDir)builtVersion.txt</VersionFile>
+		</PropertyGroup>
+
+		<!-- Read the last version number -->
+		<ReadLinesFromFile File="$(VersionFile)">
+			<Output TaskParameter="Lines" ItemName="versionLine"/>
+		</ReadLinesFromFile>
+
+		<Message Text="Current version from $(VersionFile) is: @(versionLine)"/>
+
+		<PropertyGroup>
+			<FullVersion>%(versionLine.Identity)</FullVersion>
+			<LastBuildVerNum>$([System.Text.RegularExpressions.Regex]::Match($(FullVersion), '^(\d+)\.(\d+)\.(\d+)\.(\d+)$').Groups[4].Value)</LastBuildVerNum>
+
+			<!-- Increment the revision number -->
+			<buildVerNum>$([MSBuild]::Add($([System.Int32]::Parse($(LastBuildVerNum))), 1))</buildVerNum>
+		</PropertyGroup>
+
+	</Target>
+
+	<ItemGroup>
+		<!-- add a metadata 'BuildDate' -->
+		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+			<_Parameter1>BuildDate</_Parameter1>
+			<_Parameter2>$([System.DateTime]::UtcNow.ToString('u'))</_Parameter2>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+</Project>
+

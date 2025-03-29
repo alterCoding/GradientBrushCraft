@@ -1,0 +1,7 @@
+/.vs/
+/build/obj/*
+/build/bin/*
+/build/tests/*
+/packages/*
+*.csproj.user
+*.code-workspace

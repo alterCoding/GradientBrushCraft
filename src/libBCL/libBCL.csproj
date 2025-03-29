@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net472</TargetFramework>
+	  <Platform>AnyCPU</Platform>
+	  <OutputType>Library</OutputType>
+	  <RootNamespace>AltCoD</RootNamespace>
+	  <AssemblyName>LibBCL</AssemblyName>
+	  <ProjectGuid>{B9ED4660-AF43-4627-B481-3F046B6DBA33}</ProjectGuid>
+	  <AppDesignerFolder>Properties</AppDesignerFolder>
+	  <Configurations>Debug;Release;Debug-NoGUI;Release-NoGUI</Configurations>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<MajorVerNum>1</MajorVerNum>
+		<MinorVerNum>0</MinorVerNum>
+		<revVerNum>0</revVerNum>
+		<buildVerNum>0</buildVerNum>
+		<PatchSemVerNum>0</PatchSemVerNum>
+		<MetaSemVer Condition="$(Configuration.Contains('NoGUI'))">+noGui</MetaSemVer>
+		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-rc.1$(MetaSemVer)</InformationalVersion>
+	</PropertyGroup>
+
+	<Import Project="$(SolutionDir)assemblyVersions.targets" />
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>TRACE;DEBUG;BCL_HAVE_GUI</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoGUI|AnyCPU'">
+	  <DebugSymbols>true</DebugSymbols>
+	  <DebugType>full</DebugType>
+	  <Optimize>false</Optimize>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <ErrorReport>prompt</ErrorReport>
+	  <WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<DefineConstants>TRACE;BCL_HAVE_GUI</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release-NoGUI|AnyCPU' ">
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<DefineConstants>TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Condition="$(Configuration.Contains('-NoGUI'))" Remove="UI.WinForms/*.cs;UI.Win32.Windows/*.cs" />
+		<Reference Condition="!$(Configuration.Contains('-NoGUI'))" Include="System.Windows.Forms" />
+	</ItemGroup>
+	
+</Project>

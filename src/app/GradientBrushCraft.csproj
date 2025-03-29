@@ -1,0 +1,99 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+	  <RootNamespace>AltCoD.GradientCraft</RootNamespace>
+
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<MajorVerNum>1</MajorVerNum>
+		<MinorVerNum>0</MinorVerNum>
+		<revVerNum>0</revVerNum>
+		<buildVerNum>0</buildVerNum>
+		<PatchSemVerNum>0</PatchSemVerNum>
+		<MetaSemVer></MetaSemVer>
+		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-beta.1$(MetaSemVer)</InformationalVersion>
+	</PropertyGroup>
+
+	<Import Project="$(SolutionDir)assemblyVersions.targets" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\libBCL\BCL.Reflection\EmbeddedAssemblyLoader.cs" Link="EmbeddedAssemblyLoader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libBCL\libBCL.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="..\..\build\bin\$(Configuration)\net472\libBCL.dll">
+			<LogicalName>LibBCL.dll</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="GradientCraft\AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GradientCraft\AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GradientCraft\GradientButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="GradientCraft\GradientForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GradientCraft\GradientForm.Designer.cs">
+      <DependentUpon>GradientForm.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GradientCraft\GradientInfoWnd.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GradientCraft\GradientInfoWnd.Designer.cs">
+      <DependentUpon>GradientInfoWnd.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GradientCraft\SourceCodeWnd.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GradientCraft\SourceCodeWnd.Designer.cs">
+      <DependentUpon>SourceCodeWnd.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="GradientCraft\AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="GradientCraft\GradientForm.resx">
+      <DependentUpon>GradientForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="GradientCraft\GradientInfoWnd.resx">
+      <DependentUpon>GradientInfoWnd.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="GradientCraft\SourceCodeWnd.resx">
+      <DependentUpon>SourceCodeWnd.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
