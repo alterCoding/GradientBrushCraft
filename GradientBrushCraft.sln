@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2F56C839-6517-4043-8477-DADCD9E2736A}"
 	ProjectSection(SolutionItems) = preProject
 		assemblyVersions.targets = assemblyVersions.targets
+		customTasks.targets = customTasks.targets
 		Directory.Build.props = Directory.Build.props
 		LICENSE.txt = LICENSE.txt
 	EndProjectSection
@@ -16,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libBCL", "src\libBCL\libBCL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetInventory", "src\DotNetInventory\DotNetInventory.csproj", "{757B9DB2-6440-436C-BD6F-50F2EF3F2E94}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GradientBrushCraft", "src\app\GradientBrushCraft.csproj", "{FD3F6E50-DFA0-4654-9A51-3712B315DB8B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GradientBrushCraft", "src\app\GradientBrushCraft.csproj", "{FD3F6E50-DFA0-4654-9A51-3712B315DB8B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

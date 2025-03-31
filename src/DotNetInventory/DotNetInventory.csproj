@@ -31,14 +31,21 @@
     <Compile Include="..\libBCL\BCL.Reflection\EmbeddedAssemblyLoader.cs" Link="EmbeddedAssemblyLoader.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\libBCL\libBCL.csproj" />
-  </ItemGroup>
-
+	<PropertyGroup>
+		<LibBCLProjectPath>..\libBCL\libBCL.csproj</LibBCLProjectPath>
+	</PropertyGroup>
 	<ItemGroup>
-		<EmbeddedResource Include="..\..\build\bin\$(Configuration)-NoGUI\net472\libBCL.dll">
-			<LogicalName>LibBCL.dll</LogicalName>
-		</EmbeddedResource>
+		<ProjectReference Include="$(LibBCLProjectPath)" />
 	</ItemGroup>
+
+	<Target Name="EmbedLibBCL" BeforeTargets="ResolveReferences">
+		<ItemGroup>
+			<EmbeddedResource Include="@(ReferenceCopyLocalPaths)" 
+							  Condition="'%(ReferenceCopyLocalPaths.ProjectReferenceOriginalItemSpec)' == '$(LibBCLProjectPath)' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll'">
+				<LogicalName>%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</LogicalName>
+			</EmbeddedResource>
+		</ItemGroup>
+		<Message Text="The libBCL has been embedded from %(ReferenceCopyLocalPaths.Identity)"/>
+	</Target>
 
 </Project>

@@ -1,0 +1,26 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<UsingTask TaskName="GetMetadataTask" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll" >
+		<ParameterGroup>
+			<Items ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+			<MetadataString Output="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System"/>
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[
+    StringBuilder metadata = new StringBuilder();
+foreach (var item in Items)
+{
+    metadata.AppendFormat("{0}\r\n", item);
+    foreach (string name in item.MetadataNames)
+    {
+        metadata.AppendFormat("  {0}={1}\r\n", name, item.GetMetadata(name));
+    }
+    metadata.AppendFormat("\r\n");
+}
+MetadataString = metadata.ToString();
+]]>
+			</Code>
+		</Task>
+	</UsingTask>
+</Project>

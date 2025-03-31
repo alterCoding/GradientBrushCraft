@@ -6,8 +6,7 @@
 
 	<PropertyGroup>
 	  <BaseIntermediateOutputPath>$(SolutionDir)\build\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
-	  <!--<IntermediateOutputPath>$(SolutionDir)\build\obj\$(MSBuildProjectName)\$(Configuration)</IntermediateOutputPath>-->
-	  <OutputPath>$(SolutionDir)\build\bin\$(Configuration)</OutputPath>
+	  <OutputPath>$(SolutionDir)\build\bin\$(MSBuildProjectName)\$(Configuration)</OutputPath>
 	</PropertyGroup>
 
 </Project>

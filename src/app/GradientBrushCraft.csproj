@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net48</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-	  <RootNamespace>AltCoD.GradientCraft</RootNamespace>
-
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>AltCoD.GradientCraft</RootNamespace>
+	</PropertyGroup>
 
 	<PropertyGroup>
 		<MajorVerNum>1</MajorVerNum>
@@ -19,30 +18,60 @@
 	</PropertyGroup>
 
 	<Import Project="$(SolutionDir)assemblyVersions.targets" />
+	<!--<Import Project="$(SolutionDir)customTasks.targets" />-->
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="..\libBCL\BCL.Reflection\EmbeddedAssemblyLoader.cs" Link="EmbeddedAssemblyLoader.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\libBCL\libBCL.csproj" />
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="..\..\build\bin\$(Configuration)\net472\libBCL.dll">
-			<LogicalName>LibBCL.dll</LogicalName>
-		</EmbeddedResource>
+		<Compile Include="..\libBCL\BCL.Reflection\EmbeddedAssemblyLoader.cs" Link="EmbeddedAssemblyLoader.cs" />
 	</ItemGroup>
 
-  <ItemGroup>
+	<PropertyGroup>
+		<LibBCLProjectPath>..\libBCL\libBCL.csproj</LibBCLProjectPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="$(LibBCLProjectPath)" />
+	</ItemGroup>
+
+<!-- Normalement on devrait pouvoir référencer le path avec la meta TargetPath .. mais visiblement ça ne fonctionne pas
+   pour des projets ciblant netFX (uniquement netcore). Ici on voit que les metadata de ProjectReference ne définissent
+   pas de TargetPath. A confirmer
+		<ItemGroup>
+			<EmbeddedResource Include="@(ProjectReference->'%(TargetPath)')">
+				<LogicalName>LibBCL.dll</LogicalName>
+			</EmbeddedResource>
+		</ItemGroup>
+-->
+	
+	<!-- Custom target: we want to embed our dll libBCL 
+    To avoid to hardcode the libBCL.dll path or filename, we use the (undocumented) meta 'ProjectReferenceOriginalItemSpec' 
+	A simpler way would have been to use ReferenceCopyLocalPaths.Filename == LibBCL but if the project libBCL changes
+	the file name we are fooled. Here we only reference the project file
+	-->
+	<Target Name="EmbedLibBCL" BeforeTargets="ResolveReferences">
+		<ItemGroup>
+			<EmbeddedResource Include="@(ReferenceCopyLocalPaths)" 
+							  Condition="'%(ReferenceCopyLocalPaths.ProjectReferenceOriginalItemSpec)' == '$(LibBCLProjectPath)' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll'">
+				<LogicalName>%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</LogicalName>
+			</EmbeddedResource>
+		</ItemGroup>
+		<Message Text="The libBCL has been embedded from %(ReferenceCopyLocalPaths.Identity)"/>
+	</Target>
+
+	<!--<Target Name="DumpProjectReferenceMetadata" AfterTargets="ResolveAssemblyReferences">
+		<GetMetadataTask Items="@(ProjectReference)">
+			<Output TaskParameter="MetadataString" PropertyName="ProjectReferenceMetadata"/>
+		</GetMetadataTask>
+		<Message Importance="High" Text="$(ProjectReferenceMetadata)" />
+	</Target>-->
+
+	<ItemGroup>
     <Compile Update="GradientCraft\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
