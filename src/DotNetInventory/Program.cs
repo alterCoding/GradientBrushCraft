@@ -102,8 +102,10 @@ namespace AltCoD.DotNetInventory
 
         public void SayHello(bool help)
         {
+            var ass = Assembly.GetExecutingAssembly();
             _cui.WithColor(() => Console.WriteLine(_hello), ConsoleColor.Green);
-            _cui.Out($"version: {Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>().Version}");
+            _cui.Out($"version: {ass.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion} " +
+                $"(file:{ass.GetCustomAttribute<AssemblyFileVersionAttribute>().Version})");
             Console.WriteLine();
 
             if(help) showUsage();
