@@ -58,7 +58,12 @@
 
 	</Target>
 
-	<ItemGroup>
+	<PropertyGroup>
+		<HaveDotNetLegacy>$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','4.5'))</HaveDotNetLegacy>
+		<!--<Message Importance="High"  Text="Building for NET legacy: $(HaveDotNetLegacy)"/>-->
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(HaveDotNetLegacy)' == 'false'">
 		<!-- add a metadata 'BuildDate' -->
 		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
 			<_Parameter1>BuildDate</_Parameter1>

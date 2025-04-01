@@ -1,14 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+	  <!--<TargetFrameworks Condition="'$(Multitarget)' == 'true' ">net472;net40</TargetFrameworks>
+	  <TargetFramework Condition="'$(Multitarget)' != 'true' ">net472</TargetFramework>-->
 	  <TargetFramework>net472</TargetFramework>
+	  <TargetFramework Condition="$(Configuration.EndsWith('Legacy'))">net40</TargetFramework>
+
 	  <Platform>AnyCPU</Platform>
 	  <OutputType>Library</OutputType>
 	  <RootNamespace>AltCoD</RootNamespace>
 	  <AssemblyName>LibBCL</AssemblyName>
 	  <ProjectGuid>{B9ED4660-AF43-4627-B481-3F046B6DBA33}</ProjectGuid>
 	  <AppDesignerFolder>Properties</AppDesignerFolder>
-	  <Configurations>Debug;Release;Debug-NoGUI;Release-NoGUI</Configurations>
+	  <Configurations>Debug;Release;Debug-NoGUI;Release-NoGUI;Debug-NoGUI-Legacy;Release-NoGUI-Legacy</Configurations>
   </PropertyGroup>
 
 	<PropertyGroup>
@@ -41,6 +45,15 @@
 	  <WarningLevel>4</WarningLevel>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-NoGUI-Legacy|AnyCPU'">
+	  <DebugSymbols>true</DebugSymbols>
+	  <DebugType>full</DebugType>
+	  <Optimize>false</Optimize>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <ErrorReport>prompt</ErrorReport>
+	  <WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<DebugType>pdbonly</DebugType>
 		<Optimize>true</Optimize>
@@ -57,9 +70,32 @@
 		<WarningLevel>4</WarningLevel>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-NoGUI-Legacy|AnyCPU'">
+	  <DebugType>pdbonly</DebugType>
+	  <Optimize>true</Optimize>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <ErrorReport>prompt</ErrorReport>
+	  <WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Compile Condition="$(Configuration.Contains('-NoGUI'))" Remove="UI.WinForms/*.cs;UI.Win32.Windows/*.cs" />
 		<Reference Condition="!$(Configuration.Contains('-NoGUI'))" Include="System.Windows.Forms" />
 	</ItemGroup>
-	
+
+	<!-- 
+	https://learn.microsoft.com/en-us/visualstudio/msbuild/run-target-exactly-once?view=vs-2019
+	Mais ce n'est pas très séduisant (et si plus que 2 TFM ?)
+	- pas possible d'appeler la config de son choix (sauf en ligne de commande)
+	- pas d'ambition de Microsoft de supporter dans le GUI
+	- assez nébuleux et des issues nombreuses sur le multi-targetting (race condition notamment dans la résolution des
+	  références ... ça ne donne pas envie du tout
+	-->
+	<!--<Target Name="BuildMyBeforeBuildTargetBeforeOuterBuild" 
+			DependsOnTargets="IncrementBuildNumber"
+			BeforeTargets="DispatchToInnerBuilds"/>
+
+	<Target Name="BuildMyBeforeBuildTargetBeforeInnerBuild" BeforeTargets="BeforeBuild">
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="IncrementBuildNumber" RemoveProperties="TargetFramework"/>
+	</Target>-->
 </Project>

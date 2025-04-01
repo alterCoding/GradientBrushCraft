@@ -764,6 +764,7 @@ namespace AltCoD.BCL.Platform
         {
             if (fakeRtti) return runtimeInfoFromCurrentAssembly();
 
+#if NET471_OR_GREATER
             //from core 3 and net >= 4.7.1, we should get a full SDK or FX version 
             //BUT how do we map the build number to the effective version ? (for example netfx48 is bound to 4.8.xxxx
             //but fx481 is also bound 4.8.xxxx (and the xxxx of 4.7.xxxx may be greater than the xxxx of 4.8.xxxx)
@@ -773,11 +774,13 @@ namespace AltCoD.BCL.Platform
 
             var ver = runtimeInfoFromFrameworkDescription();
             if (ver != null) return ver;
+#endif
 
             //fallback (but is could be the simplest and why not the best answer ? though slower than parsing RTTI)
             return runtimeInfoFromCurrentAssembly();
         }
 
+#if NET471_OR_GREATER
         /// <summary>
         /// Trick to wrap the property.get() call
         /// </summary>
@@ -793,7 +796,9 @@ namespace AltCoD.BCL.Platform
         {
             return RuntimeInformation.FrameworkDescription;
         }
+#endif
 
+#if NET471_OR_GREATER
         /// <summary>
         /// retrieve from <see cref="RuntimeInformation.FrameworkDescription"/> (that doesn't work prior to 4.7.1 since
         /// the type isn't implemented ... raising a TypeLoadException)
@@ -823,6 +828,7 @@ namespace AltCoD.BCL.Platform
                 return null;
             }
         }
+#endif
 
         /// <summary>
         /// Get the fileversion of the runtime class lib (mscorlib) <br/>

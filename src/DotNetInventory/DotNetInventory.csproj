@@ -1,9 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+	  <TargetFramework>net48</TargetFramework>
+	  <TargetFramework Condition="$(Configuration.EndsWith('Legacy'))">net40</TargetFramework>
+	  <Configurations>Debug;Release;Debug-Legacy;Release-Legacy</Configurations>
+
 	  <OutputType>Exe</OutputType>
 	  <Platform>AnyCPU</Platform>
-	  <TargetFramework>net48</TargetFramework>
+
 	  <RootNamespace>AltCoD</RootNamespace>
   </PropertyGroup>
 
@@ -23,7 +27,15 @@
     <DefineConstants>DEBUG;TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Legacy|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-Legacy|AnyCPU'">
     <DefineConstants>TRACE;LIBBCL_HAVE_DYNAMIC_LOADING</DefineConstants>
   </PropertyGroup>
 
@@ -40,12 +52,11 @@
 
 	<Target Name="EmbedLibBCL" BeforeTargets="ResolveReferences">
 		<ItemGroup>
-			<EmbeddedResource Include="@(ReferenceCopyLocalPaths)" 
-							  Condition="'%(ReferenceCopyLocalPaths.ProjectReferenceOriginalItemSpec)' == '$(LibBCLProjectPath)' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll'">
+			<EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.ProjectReferenceOriginalItemSpec)' == '$(LibBCLProjectPath)' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll'">
 				<LogicalName>%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</LogicalName>
 			</EmbeddedResource>
 		</ItemGroup>
-		<Message Text="The libBCL has been embedded from %(ReferenceCopyLocalPaths.Identity)"/>
+		<Message Text="The libBCL has been embedded from %(ReferenceCopyLocalPaths.Identity)" />
 	</Target>
 
 </Project>

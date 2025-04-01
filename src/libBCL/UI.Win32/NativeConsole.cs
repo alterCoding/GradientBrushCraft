@@ -39,7 +39,7 @@ namespace AltCoD.UI.Win32
         {
             FontInfo font = new FontInfo
             {
-                cbSize = Marshal.SizeOf<FontInfo>(),
+                cbSize = Marshal.SizeOf(typeof(FontInfo)),
                 FontIndex = 0,
                 FontFamily = FixedWidthTrueType,
                 FontName = fontname,
