@@ -70,6 +70,7 @@ namespace AltCoD.BCL.Platform.Tests
             Assert.That(version.InternalVersion, Is.EqualTo(ver));
             Assert.That(version.WorldVersion, Is.EqualTo(ver));
             Assert.That(version.VersionTag, Is.EqualTo("4.8.1"));
+            Assert.That(version.ServicePack, Is.Null);
         }
 
         [Test]
@@ -91,6 +92,7 @@ namespace AltCoD.BCL.Platform.Tests
                 Assert.That(version.InstallPath, Is.EqualTo("/path/to/sdk/"));
                 Assert.That(version.InternalVersion, Is.EqualTo(runver));
                 Assert.That(version.WorldVersion, Is.EqualTo(new Version(runver.Major, runver.Minor)));
+                Assert.That(version.ServicePack, Is.Null);
             }
             else
             {

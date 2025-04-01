@@ -177,7 +177,9 @@ namespace AltCoD.BCL.Platform
         /// <param name="worldMajor">with <paramref name="worldMinor"/> expected to be 3.0, 3.5, 4.0 (earliers are out of scope)</param>
         /// <param name="worldMinor"></param>
         /// <param name="verSz"></param>
-        /// <param name="sp">service pack</param>
+        /// <param name="sp">service pack. -1 should be set to express lack of SP (but should be reserved for version that 
+        /// are not (or won't be) involved with service pack as 4.0 and later ... i.e initial releases of 2x 3x should 
+        /// be SP:0)</param>
         /// <returns></returns>
         /// <remarks>
         /// A strong release number is provided only for version from 4.5 and laters. The drawback related to may be 
@@ -187,7 +189,14 @@ namespace AltCoD.BCL.Platform
         internal static DotNetVersion NetFxSDK(int worldMajor, int worldMinor, string verSz, int sp, DotNetProfile pfl, string path)
         {
             if (worldMajor == 4 && worldMinor >= 5) 
-                throw new InvalidOperationException($"netFX >= 4.5 expect a release number (got netFX:{worldMajor}.{worldMinor})");
+                throw new InvalidOperationException(
+                    $"netFX >= 4.5 expect a release number (got netFX:{worldMajor}.{worldMinor})");
+            if(worldMajor < 4 && sp < 0)
+                throw new InvalidOperationException(
+                    $"netFX 2x or 3x expect a SP number or 0 for initial release (got netFX:{worldMajor}.{worldMinor}) sp:{sp}");
+            if(worldMajor == 4 && worldMinor <= 8 && sp != -1)
+                throw new InvalidOperationException(
+                    $"netFX 4x don't a SP number (got netFX:{worldMajor}.{worldMinor}) sp:{sp}");
 
             var ver = new Version(verSz);
             var worldVer = new Version(worldMajor, worldMinor);
@@ -195,7 +204,7 @@ namespace AltCoD.BCL.Platform
             {
                 IsStrong = ver.Build > 0, //could no build number occur ?
                 InstallPath = path,
-                ServicePack = sp
+                ServicePack = sp == -1 ? (int?)null : sp
             };
 
             return version;

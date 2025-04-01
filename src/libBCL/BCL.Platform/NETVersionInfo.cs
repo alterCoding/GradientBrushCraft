@@ -275,12 +275,13 @@ namespace AltCoD.BCL.Platform
             var installed = ndp.GetValue("Install");
             if (installed == null || (int)installed == 0) return null;
 
-            int service_pack = 0;
-            var sp = ndp.GetValue("SP");
-            if (sp != null) service_pack = (int)sp;
-
             //we expect 3.5 or 4.0 for actual useable version numbers
             var ver = new Version(versionsz);
+
+            int service_pack = -1;
+            var sp = ndp.GetValue("SP");
+            if (sp != null) service_pack = (int)sp;
+            else if (ver.Major < 4) service_pack = 0; //initial release for 2x,3x
 
             //before 3.5, no InstallPath !!
             var path = ndp.GetValue("InstallPath") as string ?? defaultPath;
