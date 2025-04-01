@@ -486,7 +486,8 @@ namespace AltCoD.BCL.Platform
 
                 //fallback to 4.0 
                 if (highver == null) highver = fromRegistryNetFX40OrEarlier(regkey);
-                else yield return highver;
+
+                if(highver != null) yield return highver;
 
                 //get (if any) the prior versions that have been upgraded in place
                 //(notice that we should get as a duplicate the highest version)
