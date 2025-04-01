@@ -92,7 +92,11 @@ namespace AltCoD.BCL.Platform.Tests
 
             netinfo = new NETVersionInfo(DotNetTarget.netfx, DotNetVersionType.CLR);
             DotNetVersion clr_ver = netinfo.InstalledVersion;
-            Assert.That(clr_ver.IsStrong, Is.True);
+
+            //from 4.6 the CLR revNumber doesn't tell anything (stuck on 42000)
+            if (clr_ver.InternalVersion < DotNetVersion._runtimeCLRnetFX46) Assert.That(clr_ver.IsStrong, Is.True);
+            else Assert.That(clr_ver.IsStrong, Is.False);
+
             Assert.That(clr_ver.Target, Is.EqualTo(DotNetTarget.netfx));
             Assert.That(clr_ver.VersionType, Is.EqualTo(DotNetVersionType.CLR));
 
@@ -101,7 +105,7 @@ namespace AltCoD.BCL.Platform.Tests
                 Assert.That(clr_ver.WorldVersion, Is.EqualTo(new Version(4, 0)));
 
                 if (sdk_ver.WorldVersion >= new Version(4, 6))
-                    Assert.That(clr_ver.InternalVersion, Is.EqualTo(new Version(4, 0, 30319, 4200)));
+                    Assert.That(clr_ver.InternalVersion, Is.EqualTo(new Version(4, 0, 30319, 42000)));
                 else
                     Assert.That(clr_ver.InternalVersion, Is.GreaterThan(new Version(4, 0, 30319, 0)));
             }

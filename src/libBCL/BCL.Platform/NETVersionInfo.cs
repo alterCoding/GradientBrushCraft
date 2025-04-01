@@ -650,10 +650,10 @@ namespace AltCoD.BCL.Platform
             ver = fromRegistryNetFX45OrLater(v4full);
             if (ver != null && ver.WorldVersion.Major == 4 && ver.WorldVersion.Minor >= 6)
             {
-                //by design, from netFX 4.6 the CLR is the same 4.0.30319.4200
+                //by design, from netFX 4.6 the CLR is the same 4.0.30319.42000
                 //note: the registry entries contains only the 4.0.30319 ... but the runtime api always returns 4200
-                //as rev-number
-                return DotNetVersion.NetFxCLR(new Version(4, 0, 30319, 4200), ver.InstallPath);
+                //as rev-number, so we hardcode the result
+                return DotNetVersion.NetFxCLR(new Version(4, 0, 30319, 42000), ver.InstallPath);
             }
 
             if (ver != null && ver.WorldVersion.Major == 4 && ver.WorldVersion.Minor <= 5)
