@@ -293,6 +293,8 @@ namespace AltCoD.BCL.Platform
             //so we assume that anything prior to v4.0 is a full profile
             //motivation: installating the 3.5 sp1 full profile FIXES the registry entries thus let's assume to
             //unsupport those fucking client profiles
+            //
+            //BUG: if one reads a subkey, testing ndp.Name for profile does not make sense
 
             var profile = ndp.Name.Contains("Full") ? DotNetProfile.fullFX
                 : (ndp.Name.Contains("Client") ? DotNetProfile.clientFX : DotNetProfile.fullFX);
@@ -534,11 +536,9 @@ namespace AltCoD.BCL.Platform
         }
 
         /// <summary>
-        /// Get the CLR4 version when installed. CLR4 is detected if: <br/>
-        /// - SDK 4.5 and greater is installed <br/>
-        /// - or SDK 4.0 full or client profile is installed
+        /// Get the CLR4 version (if installed) from registry SDK entries and file info.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>version or null</returns>
         private DotNetVersion tryGetCLR40(RegistryKey ndp)
         {
             RegistryKey key = null;
@@ -594,6 +594,7 @@ namespace AltCoD.BCL.Platform
                         var filever = FileVersionInfo.GetVersionInfo(mscorlib);
                         //we take productversion as fileversion may contain some additional info which would
                         //disrupt the version parsing
+                        //(shown on XP, 2.0.50727.3053 (netfxsp.050727-3000)
                         if (Version.TryParse(filever.ProductVersion, out Version libver))
                             return DotNetVersion.NetFxCLR(libver, Path.Combine(path, _clr20folderOrKey));
                     }
@@ -640,57 +641,95 @@ namespace AltCoD.BCL.Platform
         }
 
         /// <summary>
-        /// Get the CLR 4 version from the actual netFX registry entries or file version
+        /// Get the CLR 4 version from the actual netFX registry entries (based on the SDK 4x presence and file info 
+        /// version related to) <br/>
+        /// - SDK 4.6 or later is installed (hardcoded version is returned)<br/>
+        /// - SDK 4.5 is installed (clr.dll file version is returned) <br/>
+        /// - SDK 4.0 full or client profile is installed  (clr.dll file version is returned) <br/>
         /// </summary>
-        /// <param name="v4full">expected the hive NDP/v4/full </param>
-        /// <returns></returns>
-        private DotNetVersion fromRegistryCLR40(RegistryKey v4full)
+        /// <param name="v4k">expected the hive NDP/v4/full or NDP/v4/client </param>
+        /// <returns>hardcoded value or clr.dll file info</returns>
+        private DotNetVersion fromRegistryCLR40(RegistryKey v4k)
         {
             DotNetVersion ver;
             
-            ver = fromRegistryNetFX45OrLater(v4full);
+            ver = fromRegistryNetFX45OrLater(v4k);
             if (ver != null && ver.WorldVersion.Major == 4 && ver.WorldVersion.Minor >= 6)
             {
-                //by design, from netFX 4.6 the CLR is the same 4.0.30319.42000
-                //note: the registry entries contains only the 4.0.30319 ... but the runtime api always returns 4200
-                //as rev-number, so we hardcode the result
+                //by design, from netFX 4.6 the CLR runtime info is unique, being 4.0.30319.42000
+                //NOTE: the registry entries contain only the 4.0.30319 (no build/rev number) ... while the runtime api
+                //always returns 42000 as rev-number.
+                //Besides, the fileinfo versions semantic has been changed (doesn't hold anymore its proper CLR versioning
+                //but SDK versioning or other file or distrib internals) 
+                //
+                //In the end, we decide to hardcode the result
                 return DotNetVersion.NetFxCLR(new Version(4, 0, 30319, 42000), ver.InstallPath);
             }
 
-            if (ver != null && ver.WorldVersion.Major == 4 && ver.WorldVersion.Minor <= 5)
+            if (ver == null) ver = fromRegistryNetFX40OrEarlier(v4k);
+
+            if(ver != null && ver.WorldVersion.Major == 4)
             {
-                //expected 4.0 and 4.5
-                //the rev-number may be useful but it isn't retrievable from registry ... that sucks too
+                //expected 4.0 and 4.5.x
+                //the rev-number would be useful but it isn't retrievable from registry ... that sucks too much
                 //one more time, thus we need to hack.
                 //the CLR version may be gathered from the file-version of the (e.g) clr.dll file
 
-                string clrdll = Path.Combine(ver.InstallPath, "clr.dll");
-                if (File.Exists(clrdll))
-                {
-                    var filever = FileVersionInfo.GetVersionInfo(clrdll);
-                    if (Version.TryParse(filever.FileVersion, out Version clrver))
-                        ver = DotNetVersion.NetFxCLR(clrver, ver.InstallPath);
-                }
+                ver = fromProductVersion(ver.InstallPath, clr: 4);
             }
+            //major > 4 isn't expected
 
             return ver;
         }
 
         /// <summary>
-        /// Get the CLR 2 version from the actual netFX registry entries
+        /// Get the CLR 2 version from the actual netFX registry entries (based on the SDK 2x/3x presence and file info 
+        /// version related to) <br/>
+        /// The mscorwks.dll file version is returned (based on trials, it seems to be the same as the registry full 
+        /// version entry) 
         /// </summary>
-        /// <param name="v2">expected the hive NDP/v2.0.50727</param>
-        /// <returns></returns>
+        /// <param name="v2">expected the hive NDP/v2.0.50727 as netfx 3.0 and 3.5 don't bring a new CLR, using the
+        /// 2.0 version</param>
+        /// <returns>the </returns>
         private DotNetVersion fromRegistryCLR20(RegistryKey v2)
         {
-            if(!(v2.GetValue("Version") is string versz) || string.IsNullOrEmpty(versz)) return null;
+            if (!(v2.GetValue("Version") is string versz) || string.IsNullOrEmpty(versz)) return null;
 
             //why the fuc..g hive for v2.0.x doesn't contain a key value "installPath" like the others ?
-            string path = getGlobalInstallRoot();
+            //NOTE:what if an exotic install with another folder ?? that'll screw up for sure 
+            string path = Path.Combine(getGlobalInstallRoot(), _clr20folderOrKey);
 
-            return DotNetVersion.NetFxCLR(new Version(versz), path ?? string.Empty);
+            DotNetVersion ver = fromProductVersion(path, clr: 2);
+            if(ver == null) ver = DotNetVersion.NetFxCLR(new Version(versz), path ?? string.Empty);
+
+            return ver;
         }
 
+        /// <summary>
+        /// read product version from the CLR file
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="clr">expected clr:2 or clr:4</param>
+        /// <returns>product version or null</returns>
+        private DotNetVersion fromProductVersion(string path, int clr)
+        {
+            string clr_file = null;
+            if (clr == 2) clr_file = "mscorwks.dll";
+            else if (clr == 4) clr_file = "clr.dll";
+
+            if (clr_file == null) 
+                throw new InvalidOperationException($"I don't know which is the CLR filename for clr:{clr}");
+
+            string clrdll = Path.Combine(path, clr_file);
+            if (File.Exists(clrdll))
+            {
+                var filever = FileVersionInfo.GetVersionInfo(clrdll);
+                if (Version.TryParse(filever.ProductVersion, out Version clrver))
+                    return DotNetVersion.NetFxCLR(clrver, path);
+            }
+
+            return null;
+        }
 
         #endregion
 
