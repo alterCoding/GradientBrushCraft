@@ -41,8 +41,13 @@ Features
 Usage
 -----
 
-No installation is required, as long as *.NET Framework* is available. The target version is 4.8 but 4.5 is enough.  
-That means nothing should be needed from Win10 and later.
+No installation is required, as long as *.NET Framework* is available. The target version is **4.8**.
+
+**4.7.1** version: despite notice, the application should run seamlessly \
+**4.5[.x] - 4.7** versions: the application may be used (some limitations) \
+**4.0 and earlier** versions: unsupported
+
+That means for most of system versions from Win10, nothing should be needed.
 
 > Copy and Run the executable `GradientBrushCraft.exe` :shield:
 
@@ -78,7 +83,7 @@ History
 -------
 | Version | Date | Notes |
 | ------- | ---- | ----- |
-| 1.0.0-rc.1 | coming soon | |
+| 1.0.0-beta.1 | 2025-04-03 | filever(1.0.11.6) |
 
 ---
 
