@@ -4,7 +4,7 @@
 	  <!--<TargetFrameworks Condition="'$(Multitarget)' == 'true' ">net472;net40</TargetFrameworks>
 	  <TargetFramework Condition="'$(Multitarget)' != 'true' ">net472</TargetFramework>-->
 	  <TargetFramework>net472</TargetFramework>
-	  <TargetFramework Condition="$(Configuration.EndsWith('Legacy'))">net40</TargetFramework>
+	  <TargetFramework Condition="$(Configuration.EndsWith('Legacy'))">net35</TargetFramework>
 
 	  <Platform>AnyCPU</Platform>
 	  <OutputType>Library</OutputType>
@@ -21,7 +21,8 @@
 		<revVerNum>0</revVerNum>
 		<buildVerNum>0</buildVerNum>
 		<PatchSemVerNum>0</PatchSemVerNum>
-		<MetaSemVer Condition="$(Configuration.Contains('NoGUI'))">+noGui</MetaSemVer>
+		<MetaSemVer>+$(TargetFramework)</MetaSemVer>
+		<MetaSemVer Condition="$(Configuration.Contains('NoGUI'))">$(MetaSemVer).noGui</MetaSemVer>
 		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-rc.1$(MetaSemVer)</InformationalVersion>
 	</PropertyGroup>
 

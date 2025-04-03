@@ -13,7 +13,7 @@
 		<revVerNum>0</revVerNum>
 		<buildVerNum>0</buildVerNum>
 		<PatchSemVerNum>0</PatchSemVerNum>
-		<MetaSemVer></MetaSemVer>
+		<MetaSemVer>+$(TargetFramework)</MetaSemVer>
 		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-beta.1$(MetaSemVer)</InformationalVersion>
 	</PropertyGroup>
 

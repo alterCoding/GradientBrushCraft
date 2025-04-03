@@ -116,7 +116,7 @@ namespace AltCoD.BCL.CLI
 
             if (!cprompt.IsNoOp)
             {
-                if (!fmt.HasFlag(FormatOptions.disablePrompt))
+                if ((fmt & FormatOptions.disablePrompt) == 0)
                 {
                     WithColor(() =>
                     {

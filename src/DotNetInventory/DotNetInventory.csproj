@@ -2,12 +2,12 @@
 
 	<PropertyGroup>
 	  <TargetFramework>net48</TargetFramework>
-	  <TargetFramework Condition="$(Configuration.EndsWith('Legacy'))">net40</TargetFramework>
+	  <TargetFramework Condition="$(Configuration.EndsWith('Legacy'))">net35</TargetFramework>
 	  <Configurations>Debug;Release;Debug-Legacy;Release-Legacy</Configurations>
 
 	  <OutputType>Exe</OutputType>
 	  <Platform>AnyCPU</Platform>
-
+		<AssemblyName Condition ="$(Configuration.EndsWith('Legacy'))">DotNetInventory-legacy</AssemblyName>
 	  <RootNamespace>AltCoD</RootNamespace>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
 		<revVerNum>0</revVerNum>
 		<buildVerNum>0</buildVerNum>
 		<PatchSemVerNum>0</PatchSemVerNum>
-		<MetaSemVer>+fxonly</MetaSemVer>
+		<MetaSemVer>+$(TargetFramework)</MetaSemVer>
 		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-beta.1$(MetaSemVer)</InformationalVersion>
 	</PropertyGroup>
 

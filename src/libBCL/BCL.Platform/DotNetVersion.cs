@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Collections.Generic;
 
 namespace AltCoD.BCL.Platform
 {
@@ -108,6 +109,7 @@ namespace AltCoD.BCL.Platform
     /// 
     public class DotNetVersion
     {
+#if NET40_OR_GREATER
         public DotNetVersion(FrameworkName framework)
         {
             Target = string.Compare(framework.Identifier, _netFXName, ignoreCase:true) == 0 ? DotNetTarget.netfx 
@@ -133,6 +135,7 @@ namespace AltCoD.BCL.Platform
             else if ("Client".Equals(framework.Profile, StringComparison.OrdinalIgnoreCase)) Profile = DotNetProfile.clientFX;
             else Profile = DotNetProfile.fullFX;
         }
+#endif
 
         private DotNetVersion(DotNetTarget target, DotNetVersionType type, Version ver, Version worldVer, string verSz, DotNetProfile pfl)
         {
@@ -253,9 +256,14 @@ namespace AltCoD.BCL.Platform
         /// </summary>
         /// <param name="ver">the limited version number</param>
         /// <returns></returns>
-        internal static DotNetVersion NetFxWorldSDK(Version ver)
+        /// <remarks><see cref="InternalVersion"/> value will be equal to the <see cref="WorldVersion"/> value since it
+        /// can't hold more information</remarks>
+        internal static DotNetVersion NetFxWorldSDK(Version ver, string path = null)
         {
-            return new DotNetVersion(DotNetTarget.netfx, DotNetVersionType.SDK, ver, ver, ver.ToString(), DotNetProfile.any);
+            return new DotNetVersion(DotNetTarget.netfx, DotNetVersionType.SDK, ver, ver, ver.ToString(), DotNetProfile.any)
+            {
+                InstallPath = path
+            };
         }
 
         /// <summary>
@@ -312,7 +320,17 @@ namespace AltCoD.BCL.Platform
             else return false;
 
             var versionsz = new string(framework.Skip(id.Length).SkipWhile(c => !char.IsDigit(c)).ToArray());
-            return Version.TryParse(versionsz, out version);
+            version = VersionBackport.FromString(versionsz);
+            return version != null;
+        }
+
+        /// <summary>
+        /// Get a hash-key like (limited to the versionning functional domain)
+        /// </summary>
+        /// <returns></returns>
+        internal DotNetVersionKey MakeKey()
+        {
+            return new DotNetVersionKey(Target, VersionType, WorldVersion);
         }
 
         public DotNetVersionType VersionType { get; }
@@ -510,7 +528,85 @@ namespace AltCoD.BCL.Platform
         }
 
         public override bool Equals(object obj) => obj is DotNetVersionKey o && Equals(o);
-        public static bool operator==(DotNetVersionKey k1, DotNetVersionKey k2) => k1 != null ? k1.Equals(k2) : k2 == null;
+        public static bool operator==(DotNetVersionKey k1, DotNetVersionKey k2) => !(k1 is null) ? k1.Equals(k2) : k2 is null;
         public static bool operator !=(DotNetVersionKey k1, DotNetVersionKey k2) => !(k1 == k2);
+    }
+
+    /// <summary>
+    /// Loose comparer equality uses <see cref="VersionBackport.WeakEquivalence(Version, Version)"/>
+    /// </summary>
+    internal class DotNetVersionKeyLooseComparer : IEqualityComparer<DotNetVersionKey>, IComparer<DotNetVersionKey>
+    {
+        public bool Equals(DotNetVersionKey x, DotNetVersionKey y)
+        {
+            if(ReferenceEquals(x, y)) return true;
+            if (x == null || y == null) return false;
+
+            return x.Target == y.Target && x.KeyType == y.KeyType && VersionBackport.WeakEquivalence(x.Value, y.Value);
+        }
+
+        public int GetHashCode(DotNetVersionKey obj)
+        {
+            //old way, since targeting old frameworks
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + obj.Target.GetHashCode();
+                hash = hash * 23 + obj.KeyType.GetHashCode();
+
+                hash = hash * 23 + obj.Value.Major;
+                hash = hash * 23 + obj.Value.Minor;
+                hash = hash * 23 + (obj.Value.Build != -1 ? obj.Value.Build : 0);
+                hash = hash * 23 + (obj.Value.Revision != -1 ? obj.Value.Revision : 0);
+
+                return hash;
+            }
+        }
+
+        /// <summary>
+        /// Loose (but not too much) comparison<br/>
+        /// <see cref="DotNetTarget"/> is out of scope for the comparison as order is enforced by the version object as 
+        /// such <br/>
+        /// Arbitrarly, SDK values are considered as greater than CLR values <br/>
+        /// Lack of values for minorNumber, buildNumber, revNumber is considered as zero value
+        /// </summary>
+        /// <param name="k1"></param>
+        /// <param name="k2"></param>
+        /// <returns></returns>
+        public int Compare(DotNetVersionKey k1, DotNetVersionKey k2)
+        {
+            if (ReferenceEquals(k1, k2)) return 0;
+            if (k1 is null) return -1;
+            if (k2 is null) return 1;
+
+            if (k1.KeyType == DotNetVersionType.any || k2.KeyType == DotNetVersionType.any)
+                throw new InvalidOperationException(
+                    $"attempt to compare {nameof(DotNetVersionKey)} values with ${nameof(DotNetVersionType)} value {k1.KeyType}");
+
+            if (k1.KeyType < k2.KeyType) return -1;
+            else if (k1.KeyType > k2.KeyType) return 1;
+
+            //NOTE: we admit comparison of netcore and fx as the versions should be properly ordered, without overlapping
+
+            if (k1.Value.Major < k2.Value.Major) return -1;
+            else if (k1.Value.Major > k2.Value.Major) return 1;
+
+            if (k1.Value.Minor < k2.Value.Minor) return -1;
+            else if (k1.Value.Minor > k2.Value.Minor) return 1;
+
+            int v1 = k1.Value.Build;
+            int v2 = k2.Value.Build;
+            if (v1 != -1 && v1 < v2 ) return -1;
+            else if (v1 > v2 && v2 != -1) return 1;
+
+            v1 = k1.Value.Revision;
+            v2 = k2.Value.Revision;
+            if (v1 != -1 && v1 < v2 ) return -1;
+            else if (v1 > v2 && v2 != -1) return 1;
+
+            return 0;
+        }
+
+        public static readonly DotNetVersionKeyLooseComparer Instance = new DotNetVersionKeyLooseComparer();
     }
 }

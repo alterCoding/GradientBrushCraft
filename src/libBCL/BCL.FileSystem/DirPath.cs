@@ -1,8 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace AltCoD.BCL.FileSystem
 {
+    using BCL.Platform;
+
     public static class DirPath
     {
         /// <summary>
@@ -26,8 +29,8 @@ namespace AltCoD.BCL.FileSystem
         public static bool Equals(string p1, string p2, bool tryAltDir = false)
         {
             if (ReferenceEquals(p1, p2)) return true;
-            if (string.IsNullOrWhiteSpace(p1)) return string.IsNullOrWhiteSpace(p2);
-            if (string.IsNullOrWhiteSpace(p2)) return false;
+            if (p1.IsNullOrWhiteSpaces()) return p2.IsNullOrWhiteSpaces();
+            if (p2.IsNullOrWhiteSpaces()) return false;
 
             if (tryAltDir && !OS.IsWin) tryAltDir = false; //useless
 
@@ -86,13 +89,37 @@ namespace AltCoD.BCL.FileSystem
         private static readonly StringComparison _strcmp = _icase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
     }
 
-    public static class OS
+    public static class PathName
     {
-        public static readonly bool IsWin = Environment.OSVersion.IsWindow();
-    }
+        public static string Append(string p1, string p2)
+        {
+#if NET40_OR_GREATER
+            return Path.Combine(p1, p2);
+#else
+            if (p1.EndsWith(_separator)) return string.Concat(p1, p2);
+            else return string.Concat(p1, _separator, p2);
+#endif
+        }
+        public static string Append(string p1, string p2, string p3)
+        {
+#if NET40_OR_GREATER
+            return Path.Combine(p1, p2, p3);
+#else
+            if (p1.EndsWith(_separator))
+            {
+                if (p2.EndsWith(_separator)) return string.Concat(p1, p2, p3);
+                else return string.Concat(p1, p2, _separator, p3);
+            }
+            else
+            {
+                if (p2.EndsWith(_separator)) return string.Concat(p1, _separator, p2, p3);
+                else return string.Concat(p1, _separator, p2, _separator, p3);
+            }
+#endif
+        }
 
-    public static class OperatingSystemExtensions
-    {
-        public static bool IsWindow(this OperatingSystem os) => os.Platform < PlatformID.Unix;
+#if !NET40_OR_GREATER
+        public static readonly string _separator = Path.DirectorySeparatorChar.ToString();
+#endif
     }
 }

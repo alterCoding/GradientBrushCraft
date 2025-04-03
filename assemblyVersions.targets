@@ -64,7 +64,9 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(HaveDotNetLegacy)' == 'false'">
-		<!-- add a metadata 'BuildDate' -->
+		<!-- add a metadata 'BuildDate' 
+		https://learn.microsoft.com/en-us/dotnet/standard/assembly/set-attributes-project-file
+		-->
 		<AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
 			<_Parameter1>BuildDate</_Parameter1>
 			<_Parameter2>$([System.DateTime]::UtcNow.ToString('u'))</_Parameter2>

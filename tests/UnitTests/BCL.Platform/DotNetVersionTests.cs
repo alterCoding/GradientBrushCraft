@@ -182,5 +182,26 @@ namespace AltCoD.BCL.Platform.Tests
             Assert.That(version.Target, Is.EqualTo(DotNetTarget.netfx));
             Assert.That(version.VersionType, Is.EqualTo(DotNetVersionType.CLR));
         }
+
+        [Test]
+        public void LooselyCompareVersions()
+        {
+            var v35 = new Version(3, 5);
+            var v3500 = new Version(3, 5, 0, 0);
+            var v40 = new Version(4, 0);
+            var v452 = new Version(4, 5, 2);
+
+            Assert.That(VersionBackport.WeakEquivalence(v35, v3500), Is.True);
+
+            var kv35 = DotNetVersion.NetFxWorldSDK(v35).MakeKey();
+            var kv3500 = DotNetVersion.NetFxWorldSDK(v3500).MakeKey();
+
+            var cmp = DotNetVersionKeyLooseComparer.Instance;
+            Assert.That(cmp.Equals(kv35, kv3500), Is.True);
+            Assert.That(cmp.Compare(kv35, kv3500), Is.Zero);
+
+            Assert.That(cmp.Compare(kv3500, DotNetVersion.NetFxWorldSDK(v40).MakeKey()), Is.EqualTo(-1));
+            Assert.That(cmp.Compare(DotNetVersion.NetFxWorldSDK(v40).MakeKey(), DotNetVersion.NetFxWorldSDK(v452).MakeKey()), Is.EqualTo(-1));
+        }
     }
 }

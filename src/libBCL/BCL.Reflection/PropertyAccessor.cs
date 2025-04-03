@@ -11,7 +11,7 @@ namespace AltCoD.BCL.Reflection
     {
         public static Func<TObj, TProp> Getter<TProp>(string propertyName)
         {
-            var target = Expression.Parameter(typeof(TObj), "value");
+            var target = Expression.Parameter(typeof(TObj), "target");
             var expr = Expression.Property(target, propertyName);
 
             var result = Expression.Lambda<Func<TObj, TProp>>(expr, target).Compile();
@@ -19,9 +19,10 @@ namespace AltCoD.BCL.Reflection
             return result;
         }
 
+#if NET40_OR_GREATER
         public static Action<TObj, TProp> Setter<TProp>(string propertyName)
         {
-            var target = Expression.Parameter(typeof(TObj));
+            var target = Expression.Parameter(typeof(TObj), "target");
             var value = Expression.Parameter(typeof(TProp), propertyName);
             var expr = Expression.Property(target, propertyName);
 
@@ -29,5 +30,6 @@ namespace AltCoD.BCL.Reflection
 
             return result;
         }
+#endif
     }
 }

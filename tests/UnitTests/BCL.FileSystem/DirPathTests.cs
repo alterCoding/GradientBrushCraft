@@ -3,6 +3,8 @@ using NUnit.Framework;
 
 namespace AltCoD.BCL.FileSystem.Tests
 {
+    using BCL.Platform;
+
     [TestFixture]
     class DirPathTests
     {

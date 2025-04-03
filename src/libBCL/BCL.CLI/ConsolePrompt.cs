@@ -135,14 +135,14 @@ namespace AltCoD.BCL.CLI
 
         internal bool IsNoOp => Actions <= MessageAction.ok;
 
-        internal bool ShouldShowOnce => _options.HasFlag(Options.showPromptOnce);
+        internal bool ShouldShowOnce => (_options & Options.showPromptOnce) != 0;
 
         /// <summary>
         /// Get the help text. May contain the prompt text or not (depending on option value)
         /// </summary>
         public string GetHelp()
         {
-            if (_options.HasFlag(Options.helpIncludesPrompt))
+            if ((_options & Options.helpIncludesPrompt) != 0)
             {
                 if (!string.IsNullOrEmpty(_helpText))
                     return string.Concat(_helpText, Environment.NewLine, GetPromptText());

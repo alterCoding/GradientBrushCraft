@@ -17,6 +17,7 @@ namespace AltCoD.BCL.Platform
 {
     using BCL.Reflection;
     using BCL.FileSystem;
+    using BCL.Win32;
 
     /// <summary>
     /// A partial implementation of the dotnet system information versioning that enables to inspect and get runtime
@@ -53,6 +54,8 @@ namespace AltCoD.BCL.Platform
         /// </param>
         public NETVersionInfo(DotNetTarget target = DotNetTarget.any, DotNetVersionType type = DotNetVersionType.SDK)
         {
+            _packages = new SortedDictionary<DotNetVersionKey, DotNetVersion>(DotNetVersionKeyLooseComparer.Instance);
+
             type = type == DotNetVersionType.any ? DotNetVersionType.SDK : type;
 
             Target = target;
@@ -111,35 +114,35 @@ namespace AltCoD.BCL.Platform
         /// <returns></returns>
         public List<DotNetVersion> GetAll(bool rescan = false)
         {
-            IEnumerable<DotNetVersion> l;
-            if (_packages.Any() && !rescan)
-            {
-                l = _packages.Values;
-            }
-            else
-            {
-                l = VersionType == DotNetVersionType.CLR ? getAllCLRFromRegistry() : getAllNetFxFromRegistry();
-                l = insert(l, clear:true); //store into _packages
-            }
-
-            return l.OrderBy(v => v.WorldVersion).ToList();
+            return getPackages(rescan).Values.OrderBy(v => v.WorldVersion).ToList();
         }
 
         /// <summary>
-        /// Retrieve the target version from assembly attribute <see cref="TargetFrameworkAttribute"/> (which should be
-        /// mandatory)
+        /// Retrieve the target version from assembly attribute <see cref="TargetFrameworkAttribute"/> (which is expected
+        /// to be mandatory since NET40)
         /// </summary>
         /// <param name="assembly">if not supplied, the entry assembly will be used</param>
-        /// <returns>A weak version, meaning the version is a so-called world version (i.e a true useable .net version,
-        /// but which doesn't reference any patch-number nor build-number)</returns>
+        /// <returns>
+        /// NET40 and later: A weak version, meaning the version is a so-called "world" version (i.e a true usable .net 
+        /// version, but which doesn't reference any patch-number nor build-number). Besides, the install path isn't 
+        /// filled-out <br/>
+        /// NET35: semantic is totally different since the TargetFrameworkAttribute is unsupported.
+        /// We make use of the dependency system.core.dll version and we attempt to cross reference the version with
+        /// the locally detected sdk versions. It may to not be as reliable as it should
+        /// </returns>
         public static DotNetVersion GetTargetFrameworkVersion(Assembly assembly = null)
         {
             assembly = assembly ?? Assembly.GetEntryAssembly();
+
+#if NET40_OR_GREATER
             var attrib = assembly.GetCustomAttribute<TargetFrameworkAttribute>();
             if (attrib == null) return null;
 
             var framework = new FrameworkName(attrib.FrameworkName);
             return new DotNetVersion(framework);
+#else
+            return sdkInfoFromAssembly(DotNetTarget.netfx, assembly);
+#endif
         }
 
         public bool CouldExecute(DotNetVersion target)
@@ -171,7 +174,7 @@ namespace AltCoD.BCL.Platform
                 return v;
         }
 
-        #region SDK retrieval
+#region SDK retrieval
 
         /// <summary>
         /// Suits for netFX 4.5 and later (till 4.8.1 at now) <br/>
@@ -196,7 +199,7 @@ namespace AltCoD.BCL.Platform
                     var versionsz = key.GetValue("Version") as string;
                     var path = key.GetValue("InstallPath") as string ?? defaultPath;
 
-                    if (!string.IsNullOrWhiteSpace(versionsz) && path != null)
+                    if (!string.IsNullOrEmpty(versionsz) && path != null)
                     {
                         ver = DotNetVersion.NetFxSDK(fx45, versionsz, (uint)(int)value, path);
                     }
@@ -391,7 +394,7 @@ namespace AltCoD.BCL.Platform
             try
             {
                 //a bit ugly and too much ... to retrieve more or less 1 to 4 hives
-                var latest = getVersionKeyNames(ndp).Where(n => !n.StartsWith("v4")).SingleOrDefault();
+                var latest = getVersionKeyNames(ndp).Where(n => !n.StartsWith("v4")).FirstOrDefault();
 
                 if(latest != null)
                 {
@@ -508,9 +511,9 @@ namespace AltCoD.BCL.Platform
             finally { regkey?.Dispose(); }
         }
 
-        #endregion
+#endregion
 
-        #region CLR retrieval
+#region CLR retrieval
 
         /// <summary>
         /// Retrieve all available CLR 
@@ -588,14 +591,15 @@ namespace AltCoD.BCL.Platform
                     //We use the 'mscorlib.dll'
 
                     var path = getGlobalInstallRoot();
-                    string mscorlib = Path.Combine(path, _clr20folderOrKey, "mscorlib.dll");
+                    string mscorlib = PathName.Append(path, _clr20folderOrKey, "mscorlib.dll");
                     if (File.Exists(mscorlib))
                     {
                         var filever = FileVersionInfo.GetVersionInfo(mscorlib);
                         //we take productversion as fileversion may contain some additional info which would
                         //disrupt the version parsing
                         //(shown on XP, 2.0.50727.3053 (netfxsp.050727-3000)
-                        if (Version.TryParse(filever.ProductVersion, out Version libver))
+                        Version libver = null;
+                        if ((libver = VersionBackport.FromString(filever.ProductVersion)) != null)
                             return DotNetVersion.NetFxCLR(libver, Path.Combine(path, _clr20folderOrKey));
                     }
 
@@ -724,16 +728,17 @@ namespace AltCoD.BCL.Platform
             if (File.Exists(clrdll))
             {
                 var filever = FileVersionInfo.GetVersionInfo(clrdll);
-                if (Version.TryParse(filever.ProductVersion, out Version clrver))
+                Version clrver;
+                if ((clrver = VersionBackport.FromString(filever.ProductVersion)) != null)
                     return DotNetVersion.NetFxCLR(clrver, path);
             }
 
             return null;
         }
 
-        #endregion
+#endregion
 
-        #region runtime info
+#region runtime info
 
         /// <summary>
         /// Check that the targeted SDK requirement is satisfied by the current runtime environment
@@ -801,7 +806,7 @@ namespace AltCoD.BCL.Platform
         /// <returns></returns>
         private DotNetVersion getSDKRuntimeInfo(bool fakeRtti)
         {
-            if (fakeRtti) return runtimeInfoFromCurrentAssembly();
+            if (fakeRtti) return sdkInfoFromEntryAssembly();
 
 #if NET471_OR_GREATER
             //from core 3 and net >= 4.7.1, we should get a full SDK or FX version 
@@ -816,7 +821,7 @@ namespace AltCoD.BCL.Platform
 #endif
 
             //fallback (but is could be the simplest and why not the best answer ? though slower than parsing RTTI)
-            return runtimeInfoFromCurrentAssembly();
+            return sdkInfoFromEntryAssembly();
         }
 
 #if NET471_OR_GREATER
@@ -870,80 +875,113 @@ namespace AltCoD.BCL.Platform
 #endif
 
         /// <summary>
-        /// Get the fileversion of the runtime class lib (mscorlib) <br/>
-        /// For NetFX 4.7.1 and later, it's the same version as the <see cref="RuntimeInformation.FrameworkDescription"/>
-        /// (which must be parsed however) by design. For 4.6.x where the RuntimeInformation symbol is undefined, the 
-        /// retrieved version is still relevant. <br/>
-        /// For versions earlier or equal to 4.5.x, where the fileversion contains the useless CLR version, the version 
-        /// is deduced from the runtime path, and cross-referenced with the registry entries (in turn, it may be WRONG)
+        /// <see cref="sdkInfoFromAssembly(DotNetTarget, NETVersionInfo)"/>
         /// </summary>
-        /// <returns>a CLR or a SDK version depending on the version and some other things ... <br/>
-        /// Prior to netfx4.6, fileversion of core assemblies hold the CLR version and NOT the SDK 
-        /// </returns>
-        /// @internal the hack to guess the version for netfx before 4.6 is dirty, but netfx api encourages for that. 
-        /// Sorry, but no way, net.fx versioning was a piece of crap
-        private DotNetVersion runtimeInfoFromCurrentAssembly()
+        /// <returns></returns>
+        private DotNetVersion sdkInfoFromEntryAssembly()
         {
-            var assembly = typeof(object).Assembly;
-            var attrib = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
-
-            var runpath = Path.GetDirectoryName(assembly.Location);
-
-            var ver = new Version(attrib.Version);
-            if(ver.Major <= 4 && ver.Minor <= 5) //for fx3.5 we get 2.0.xxxxx and for4.x we get 4.0.xxxx
-            {
-                //in this case, the fileversion is useless, e.g for netfx 4.5, we get 4(.0) -------
-
-                //the nasty hack is going to consider that if the runtime directory is equal to the install path of the
-                //highest detected net install, we could assume that we are talking about the same thing
-                //then we just have to reuse the full version info from the registry
-                //[if the path are different, we keep the CLR short version and get out of there]
-                //TODO: To extend the trick, we should iterate over all the .net install to seek the runtime path
-
-                if (DirPath.Equals(runpath, InstalledVersion.InstallPath))
-                    return InstalledVersion;
-                else
-                    return DotNetVersion.NetFxCLR(ver, RuntimeEnvironment.GetRuntimeDirectory());
-            }
-
-            return DotNetVersion.NetFxSDK(ver, runpath);
+            return sdkInfoFromAssembly(Target, Assembly.GetEntryAssembly(), this);
         }
 
-        #endregion
+        /// <summary>
+        /// Get runtime information from the assembly version of the referenced System.Core.dll
+        /// </summary>
+        /// <remarks>
+        /// For NetFX 4.7.1 and later, it's far more reliable and straightforward to call <see cref="RuntimeInformation.FrameworkDescription"/>
+        /// (which must be parsed however) by design. 
+        /// </remarks>
+        /// <returns>
+        /// - a full sdk version (from the installed collection info) if the targetted sdk has been successfully 
+        /// resolved <br/>
+        /// - else a world version
+        /// </returns>
+        private static DotNetVersion sdkInfoFromAssembly(DotNetTarget target, Assembly assembly, NETVersionInfo self = null)
+        {
+            var core_ver = frameworkVersionFromSystemCore(assembly);
 
+            //we cannot make the assumption that the location of the system.core.dll would be equal to the SDK install
+            //path (as it could be resolved from the GAC or elsewhere)
+            //As a result, we iterate over the .net install records to seek the target SDK and use the installPath
+            //info attached to
+            //(world version as a fallback)
+
+            var netinfo = self ?? new NETVersionInfo(target, DotNetVersionType.SDK);
+            var sdks = netinfo.getPackages(rescan: false);
+
+            var key = new DotNetVersionKey(DotNetTarget.netfx, DotNetVersionType.SDK, core_ver);
+
+            //instead of relying on undocumented revNumber values (4.0.30319.xxxxx) in order to (attempt to) map the sdk
+            //versions related to, we use the greatest. Indeed, as all 4x versions are upgrade in-place, we can make
+            //assumption that on this platform, the greatest is/will be used
+            if(core_ver.Major == 4)
+            {
+                key = sdks.Keys.Where(k => k.KeyType == DotNetVersionType.SDK && k.Value.Major == 4).Max();
+                return sdks[key];
+            }
+            else
+            {
+                //exact match should occur only for net35 (assembly:3.5) and net40 (assembly:4.0) since all other net4x
+                //contain fucking value (assembly:4.0)
+                if (sdks.TryGetValue(key, out var version)) return version;
+            }
+
+            //fallback
+            return DotNetVersion.NetFxWorldSDK(core_ver);
+        }
+
+        /// <summary>
+        /// get the targeted SDK version from the referenced assembly system.core 
+        /// </summary>
+        /// <returns> assembly version or null if the assembly doesn't reference system.core (which shouldn't occur)</returns>
+        private static Version frameworkVersionFromSystemCore(Assembly assembly)
+        {
+            var dependency = assembly.GetReferencedAssemblies()
+                .Where(ass => ass.Name.Equals("System.Core", StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
+
+            return dependency?.Version;
+        }
+
+#endregion
+
+        private SortedDictionary<DotNetVersionKey, DotNetVersion> getPackages(bool rescan)
+        {
+            if (!_packages.Any() || rescan)
+            {
+                var l = VersionType == DotNetVersionType.CLR ? getAllCLRFromRegistry() : getAllNetFxFromRegistry();
+                add(l, clear:true); //store into _packages
+            }
+            return _packages;
+        }
 
         /// <summary>
         /// Cache the detected versions
         /// </summary>
         /// <param name="versions"></param>
         /// <param name="clear"></param>
-        /// <returns>what is actually inserted from <paramref name="versions"/></returns>
-        private IEnumerable<DotNetVersion> insert(IEnumerable<DotNetVersion> versions, bool clear = false)
+        private void add(IEnumerable<DotNetVersion> versions, bool clear = false)
         {
             if (clear) _packages.Clear();
 
             foreach(var ver in versions)
             {
-                var key = new DotNetVersionKey(ver.Target, ver.VersionType, ver.WorldVersion);
-
+                var key = ver.MakeKey();
                 if(_packages.TryGetValue(key, out DotNetVersion curVersion))
                 {
                     if (curVersion.Profile == DotNetProfile.clientFX && ver.Profile == DotNetProfile.fullFX)
                     {
                         //throw the duplicates : replacing Client by Full profile
                         _packages[key] = ver;
-                        yield return ver;
                     }
                 }
                 else
                 {
                     _packages.Add(key, ver);
-                    yield return ver;
                 }
             }
         }
 
-        #region registry shortcuts
+#region registry shortcuts
 
         /// <summary>
         /// Get the sub key names ordered by version desc
@@ -965,8 +1003,7 @@ namespace AltCoD.BCL.Platform
         /// key not found</exception>
         private RegistryKey getNetFXRegistryKey(bool noThrow)
         {
-            var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Default)
-                                 .OpenSubKey(_regKeyNetFXRegular);
+            var key = RegistryHive.LocalMachine.OpenKey(_regKeyNetFXRegular);
 
             if (key == null && !noThrow) 
                 throw new NotSupportedException("Unable to open registry for the NET Framework 'NDP' key");
@@ -980,8 +1017,7 @@ namespace AltCoD.BCL.Platform
         /// <returns></returns>
         private RegistryKey getNetFXLegacyKey()
         {
-            var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Default)
-                                 .OpenSubKey(_regKeyNetFXLegacyRuntime);
+            var key = RegistryHive.LocalMachine.OpenKey(_regKeyNetFXLegacyRuntime);
 
             if (key == null)
                 throw new NotSupportedException("Unable to open registry for the NET Framework legacy 'DotNetClient' key");
@@ -997,13 +1033,13 @@ namespace AltCoD.BCL.Platform
         private string getGlobalInstallRoot()
         {
             //using the global setting, should be safe for most cases
-            var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Default).OpenSubKey(_regKeyNetFX);
+            var key = RegistryHive.LocalMachine.OpenKey(_regKeyNetFX);
 
             if (key != null) return key.GetValue("InstallRoot") as string;
             else return null;
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// the regular key for NetFX (4.5 and later, 4.0[full,client], 3.5 and earlier full)
@@ -1028,6 +1064,6 @@ namespace AltCoD.BCL.Platform
         /// <summary>
         /// The local installed packages
         /// </summary>
-        private readonly Dictionary<DotNetVersionKey, DotNetVersion> _packages = new Dictionary<DotNetVersionKey, DotNetVersion>();
+        private readonly SortedDictionary<DotNetVersionKey, DotNetVersion> _packages;
     }
 }
