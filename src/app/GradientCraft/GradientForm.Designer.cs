@@ -85,6 +85,7 @@ namespace AltCoD.GradientCraft
             this.radioPathGradient = new System.Windows.Forms.RadioButton();
             this.radioLinearGradient = new System.Windows.Forms.RadioButton();
             this.btnShowCode = new System.Windows.Forms.Button();
+            this.btnCenterPath = new System.Windows.Forms.Button();
             this.listShapes = new System.Windows.Forms.ListBox();
             this.listLinearModes = new System.Windows.Forms.ListBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
@@ -98,8 +99,10 @@ namespace AltCoD.GradientCraft
             this.label15 = new System.Windows.Forms.Label();
             this.btnExplain = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
-            this.btnAbout = new GradientCraft.GradientButton();
-            this.btnCenterPath = new System.Windows.Forms.Button();
+            this.btnAbout = new AltCoD.GradientCraft.GradientButton();
+            this.label16 = new System.Windows.Forms.Label();
+            this.btnPaneShapeColor = new System.Windows.Forms.Button();
+            this.editPaneShapeColor = new System.Windows.Forms.MaskedTextBox();
             ((System.ComponentModel.ISupportInitialize)(this._trackBlend2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this._position2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this._position3)).BeginInit();
@@ -313,7 +316,7 @@ namespace AltCoD.GradientCraft
             // 
             // btnOuterColor
             // 
-            this.btnOuterColor.Location = new System.Drawing.Point(156, 123);
+            this.btnOuterColor.Location = new System.Drawing.Point(156, 151);
             this.btnOuterColor.Name = "btnOuterColor";
             this.btnOuterColor.Size = new System.Drawing.Size(60, 25);
             this.btnOuterColor.TabIndex = 15;
@@ -322,7 +325,7 @@ namespace AltCoD.GradientCraft
             // 
             // editOuterColor
             // 
-            this.editOuterColor.Location = new System.Drawing.Point(82, 126);
+            this.editOuterColor.Location = new System.Drawing.Point(82, 154);
             this.editOuterColor.Mask = "FFAAAAAAh";
             this.editOuterColor.Name = "editOuterColor";
             this.editOuterColor.Size = new System.Drawing.Size(68, 20);
@@ -331,7 +334,7 @@ namespace AltCoD.GradientCraft
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(10, 129);
+            this.label4.Location = new System.Drawing.Point(10, 157);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(66, 13);
             this.label4.TabIndex = 17;
@@ -689,6 +692,16 @@ namespace AltCoD.GradientCraft
             this.toolTip.SetToolTip(this.btnShowCode, "Show me the gradient source code");
             this.btnShowCode.UseVisualStyleBackColor = true;
             // 
+            // btnCenterPath
+            // 
+            this.btnCenterPath.Location = new System.Drawing.Point(206, 75);
+            this.btnCenterPath.Name = "btnCenterPath";
+            this.btnCenterPath.Size = new System.Drawing.Size(60, 25);
+            this.btnCenterPath.TabIndex = 39;
+            this.btnCenterPath.Text = "Center";
+            this.toolTip.SetToolTip(this.btnCenterPath, "Relocate the gradient to the shape center");
+            this.btnCenterPath.UseVisualStyleBackColor = true;
+            // 
             // listShapes
             // 
             this.listShapes.FormattingEnabled = true;
@@ -790,6 +803,9 @@ namespace AltCoD.GradientCraft
             // 
             // paneShapes
             // 
+            this.paneShapes.Controls.Add(this.label16);
+            this.paneShapes.Controls.Add(this.btnPaneShapeColor);
+            this.paneShapes.Controls.Add(this.editPaneShapeColor);
             this.paneShapes.Controls.Add(this.listShapes);
             this.paneShapes.Controls.Add(this.label3);
             this.paneShapes.Controls.Add(this._zoom);
@@ -865,15 +881,31 @@ namespace AltCoD.GradientCraft
             this.btnAbout.Text = "About ...";
             this.btnAbout.UseVisualStyleBackColor = true;
             // 
-            // btnCenterPath
+            // label16
             // 
-            this.btnCenterPath.Location = new System.Drawing.Point(206, 75);
-            this.btnCenterPath.Name = "btnCenterPath";
-            this.btnCenterPath.Size = new System.Drawing.Size(60, 25);
-            this.btnCenterPath.TabIndex = 39;
-            this.btnCenterPath.Text = "Center";
-            this.toolTip.SetToolTip(this.btnCenterPath, "Relocate the gradient to the shape center");
-            this.btnCenterPath.UseVisualStyleBackColor = true;
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(10, 122);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(58, 13);
+            this.label16.TabIndex = 32;
+            this.label16.Text = "Back color";
+            // 
+            // btnPaneShapeColor
+            // 
+            this.btnPaneShapeColor.Location = new System.Drawing.Point(156, 116);
+            this.btnPaneShapeColor.Name = "btnPaneShapeColor";
+            this.btnPaneShapeColor.Size = new System.Drawing.Size(60, 25);
+            this.btnPaneShapeColor.TabIndex = 30;
+            this.btnPaneShapeColor.Text = "Pick ...";
+            this.btnPaneShapeColor.UseVisualStyleBackColor = true;
+            // 
+            // editPaneShapeColor
+            // 
+            this.editPaneShapeColor.Location = new System.Drawing.Point(82, 119);
+            this.editPaneShapeColor.Mask = "FFAAAAAAh";
+            this.editPaneShapeColor.Name = "editPaneShapeColor";
+            this.editPaneShapeColor.Size = new System.Drawing.Size(68, 20);
+            this.editPaneShapeColor.TabIndex = 31;
             // 
             // GradientForm
             // 
@@ -990,6 +1022,9 @@ namespace AltCoD.GradientCraft
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Button btnExplain;
         private System.Windows.Forms.Button btnCenterPath;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Button btnPaneShapeColor;
+        private System.Windows.Forms.MaskedTextBox editPaneShapeColor;
     }
 }
 

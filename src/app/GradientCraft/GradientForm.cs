@@ -76,9 +76,12 @@ namespace AltCoD.GradientCraft
 
             updateCaptions();
 
+            bindColorProperty(editPaneShapeColor, btnPaneShapeColor, nameof(shapePaneColor), ref _shapePaneColorProperty, SystemColors.ControlDark);
             bindColorProperty(editOuterColor, btnOuterColor, nameof(outerColor), ref _outerColorProperty, SystemColors.ControlDarkDark);
+
             bindColorProperty(editCenterColor, btnCenterColor, nameof(centerColor), ref _centerColorProperty, Color.White);
             bindColorProperty(editGradientColor, btnGradientColor, nameof(gradientColor), ref _gradientColorProperty, Color.Blue);
+
             bindColorProperty(editOuterRingColor, btnOuterRing, nameof(outerRingColor), ref _outerRingColorProperty, Color.LightGray);
             bindColorProperty(editTextureColor, btnTextureColor, nameof(textureColor), ref _textureColorProperty, Color.Yellow);
             bindColorProperty(editBackColor, btnBackColor, nameof(backgroundColor), ref _backColorProperty, _gradientColor);
@@ -843,7 +846,7 @@ $@"{apath}.AddString(""ABCDEF"", new FontFamily(""Arial""), (int)FontStyle.Bold,
             var g = Graphics.FromImage(_shapeBitmap);
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            g.Clear(SystemColors.Control);
+            g.Clear(_shapePaneColor);
 
             //when using overlay
             //- we fill the background with a texture brush
@@ -1160,6 +1163,18 @@ $@"{apath}.AddString(""ABCDEF"", new FontFamily(""Arial""), (int)FontStyle.Bold,
             }
         }
 
+        private Color shapePaneColor
+        {
+            get => _shapePaneColor;
+            set
+            {
+                if (_shapePaneColor == value) return;
+
+                _shapePaneColor = value;
+                _gradientPane.Invalidate();
+            }
+        }
+
         private Color outerColor
         {
             get => _outerColor;
@@ -1444,7 +1459,11 @@ $@"{apath}.AddString(""ABCDEF"", new FontFamily(""Arial""), (int)FontStyle.Bold,
         private Color _gradientColor;
         private readonly ColorProperty _gradientColorProperty;
 
-        /** bullet solid outline */
+        /** shape panel */
+        private Color _shapePaneColor;
+        private readonly ColorProperty _shapePaneColorProperty;
+
+        /** shape solid outline */
         private Color _outerColor;
         private readonly ColorProperty _outerColorProperty;
         private Pen _outlinePen;
