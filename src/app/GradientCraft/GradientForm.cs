@@ -50,9 +50,19 @@ namespace AltCoD.GradientCraft
             listShapes.DataSource = Enum.GetValues(typeof(ShapeType));
             listShapes.SelectedIndexChanged += (s, e) => shapeType = (ShapeType)(s as ListBox).SelectedItem;
 
-            listTextures.DataSource = Enum.GetValues(typeof(HatchStyle));
-            listTextures.SelectedIndexChanged += (s, e) => textureType = (HatchStyle)(s as ListBox).SelectedItem;
-            textureType = HatchStyle.LargeCheckerBoard;
+            //HatchStyle enum has duplicated/non-functional values, which should be removed.
+            //Given the fact that HatchStyle.Min.ToString() may return "Horizontal", being the 1th item ... even 
+            //Enum.GetName(typeof(HatchStyle), HashStyle.Cross) is useless and return LargeGrid (duplicate)
+            //(C# Enum type implementation has always been rubbish, especially till .Net 5)
+            //As a result, we are constrained to use plain string values 
+            var hatch = Enum.GetNames(typeof(HatchStyle)).ToList();
+            hatch.Sort();
+            hatch.Remove("Min");
+            hatch.Remove("Max");
+            listTextures.DataSource = hatch;
+            listTextures.SelectedIndexChanged += (s, e) 
+                => textureType = (HatchStyle)Enum.Parse(typeof(HatchStyle), (string)(s as ListBox).SelectedItem);
+            listTextures.SelectedItem = "LargeCheckerBoard";
 
             _gradientPane.MouseUp += (s, e) => onGradientMouseUp(e);
             _gradientPane.SizeChanged += (s, e) => onGradientPaneResize();
@@ -1310,13 +1320,16 @@ $@"{apath}.AddString(""ABCDEF"", new FontFamily(""Arial""), (int)FontStyle.Bold,
             }
         }
 
+        /// <summary>
+        /// The active texture style
+        /// </summary>
+        /// <remarks>the setter doesn't update the GUI due to poor implementation of Enum type (if duplicated values 
+        /// exist). Use the list.SelectedItem setter which updates the GUI and this property as a result</remarks>
         private HatchStyle textureType
         {
             get => _textureType;
             set
             {
-                listTextures.SelectedItem = value;
-
                 if (_textureType == value) return;
 
                 _textureType = value;
