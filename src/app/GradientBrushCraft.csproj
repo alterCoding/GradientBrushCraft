@@ -14,7 +14,7 @@
 		<buildVerNum>0</buildVerNum>
 		<PatchSemVerNum>0</PatchSemVerNum>
 		<MetaSemVer>+$(TargetFramework)</MetaSemVer>
-		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-beta.1$(MetaSemVer)</InformationalVersion>
+		<InformationalVersion>$(MajorVerNum).$(MinorVerNum).$(PatchSemVerNum)-beta.2$(MetaSemVer)</InformationalVersion>
 	</PropertyGroup>
 
 	<Import Project="$(SolutionDir)assemblyVersions.targets" />

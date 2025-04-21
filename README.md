@@ -84,7 +84,10 @@ History
 | Version | Date | Notes |
 | ------- | ---- | ----- |
 | 1.0.0-beta.1 | 2025-04-03 | filever(1.0.11.6) |
+| 1.0.0-beta.2 | 2025-04-21 | filever(1.0.14.26) |
+| <td colspan="3">(add) shape panel background color <br> (fixed) textures list behavior </td> |
 
+ 
 ---
 
 ![warning](https://img.shields.io/badge/Contains-resentment-orange) <span style="vertical-align:top;">&nbsp;while &nbsp;</span>![madewith](https://img.shields.io/badge/made_with-care-green)
